@@ -1,0 +1,77 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
+    }
+    ext {
+        serenityVersion = "3.7.1"
+        serenityGradleVersion = "3.2.0"
+        serenityCucumberVersion = "3.6.12"
+    }
+    dependencies {
+        classpath("net.serenity-bdd:serenity-gradle-plugin:$rootProject.ext.serenityGradleVersion")
+        classpath ("net.serenity-bdd:serenity-single-page-report:$rootProject.ext.serenityGradleVersion")
+        classpath ("org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.3")
+    }
+}
+
+plugins {
+    id 'java'
+    id 'eclipse'
+    id 'idea'
+}
+
+repositories {
+    mavenCentral()
+}
+
+defaultTasks 'clean', 'test', 'aggregate' , 'reports'
+
+
+apply plugin: 'net.serenity-bdd.aggregator'
+apply plugin: 'org.sonarqube'
+
+
+group 'com.slease.certificacion'
+version '1.0'
+
+configurations.all {
+    resolutionStrategy {
+        force 'io.cucumber:cucumber-core:7.11.1'
+    }
+}
+dependencies {
+    testImplementation "org.slf4j:slf4j-simple:2.0.6",
+            "org.hamcrest:hamcrest:2.2",
+            "net.serenity-bdd:serenity-cucumber:$rootProject.ext.serenityCucumberVersion",
+            "junit:junit:4.13.2",
+            "org.assertj:assertj-core:3.24.2"
+
+    implementation "net.serenity-bdd:serenity-core:$rootProject.ext.serenityVersion",
+            "net.serenity-bdd:serenity-junit:$rootProject.ext.serenityVersion",
+            "net.serenity-bdd:serenity-screenplay:$rootProject.ext.serenityVersion",
+            "net.serenity-bdd:serenity-screenplay-webdriver:$rootProject.ext.serenityVersion",
+            "net.serenity-bdd:serenity-screenplay-rest:$rootProject.ext.serenityVersion",
+            'com.sikulix:sikulixapi:2.0.5'
+}
+
+test {
+    systemProperties System.getProperties()
+    systemProperty "file.encoding", "UTF-8"
+    systemProperty "feature.file.encoding", "UTF-8"
+    systemProperty "cucumber.options", System.properties.getProperty("cucumber.options")
+    testLogging.showStandardStreams = true
+    finalizedBy(aggregate)
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding('UTF-8')
+}
+
+serenity {
+    reports = ["single-page-html"]
+}
+
+gradle.startParameter.continueOnFailure = true
